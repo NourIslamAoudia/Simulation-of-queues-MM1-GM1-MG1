@@ -474,6 +474,143 @@ def compare_with_theory(results_mm1, theory):
     plt.savefig('comparaison_theorie.png', dpi=300)
     plt.show()
 
+def save_results_to_txt(results_mm1, results_gm1, results_mg1, theory, filename="resultats_simulation.txt"):
+    """
+    Enregistre les résultats des simulations dans un fichier texte structuré
+    
+    Paramètres:
+    -----------
+    results_mm1 : dict
+        Résultats pour M/M/1
+    results_gm1 : dict
+        Résultats pour G/M/1
+    results_mg1 : dict
+        Résultats pour M/G/1
+    theory : dict
+        Métriques théoriques calculées
+    filename : str
+        Nom du fichier de sortie
+    """
+    with open(filename, 'w', encoding='utf-8') as f:
+        # En-tête
+        f.write("=" * 80 + "\n")
+        f.write(f"RÉSULTATS DES SIMULATIONS DE FILES D'ATTENTE\n")
+        f.write("=" * 80 + "\n\n")
+        
+        # Paramètres généraux
+        f.write("PARAMÈTRES GÉNÉRAUX\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"Taux de service (μ): {1.0}\n")
+        f.write(f"Nombre de valeurs de λ testées: {len(results_mm1['lambda'])}\n")
+        f.write(f"Plage de valeurs de λ: {min(results_mm1['lambda']):.1f} à {max(results_mm1['lambda']):.1f}\n\n")
+        
+        # Tableau des résultats
+        f.write("RÉSULTATS DÉTAILLÉS\n")
+        f.write("-" * 80 + "\n")
+        
+        # En-têtes du tableau
+        f.write(f"{'λ':^10} | ")
+        f.write(f"{'ρ théorique':^12} | ")
+        f.write(f"{'M/M/1 TR':^12} | ")
+        f.write(f"{'M/M/1 TA':^12} | ")
+        f.write(f"{'M/M/1 ρ':^12} | ")
+        f.write(f"{'G/M/1 TR':^12} | ")
+        f.write(f"{'G/M/1 TA':^12} | ")
+        f.write(f"{'G/M/1 ρ':^12} | ")
+        f.write(f"{'M/G/1 TR':^12} | ")
+        f.write(f"{'M/G/1 TA':^12} | ")
+        f.write(f"{'M/G/1 ρ':^12} | ")
+        f.write(f"{'Théorie TR':^12}\n")
+        
+        f.write("-" * 150 + "\n")
+        
+        # Données
+        for i, lmbda in enumerate(results_mm1["lambda"]):
+            rho = lmbda  # Pour μ = 1.0, ρ = λ
+            
+            f.write(f"{lmbda:^10.2f} | ")
+            f.write(f"{rho:^12.4f} | ")
+            f.write(f"{results_mm1['mean_response_time'][i]:^12.4f} | ")
+            f.write(f"{results_mm1['mean_wait_time'][i]:^12.4f} | ")
+            f.write(f"{results_mm1['server_utilization'][i]:^12.4f} | ")
+            f.write(f"{results_gm1['mean_response_time'][i]:^12.4f} | ")
+            f.write(f"{results_gm1['mean_wait_time'][i]:^12.4f} | ")
+            f.write(f"{results_gm1['server_utilization'][i]:^12.4f} | ")
+            f.write(f"{results_mg1['mean_response_time'][i]:^12.4f} | ")
+            f.write(f"{results_mg1['mean_wait_time'][i]:^12.4f} | ")
+            f.write(f"{results_mg1['server_utilization'][i]:^12.4f} | ")
+            f.write(f"{theory['mean_response_time'][i]:^12.4f}\n")
+        
+        f.write("-" * 150 + "\n\n")
+        
+        # Comparaison avec la théorie pour M/M/1
+        f.write("COMPARAISON M/M/1 AVEC LA THÉORIE\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"{'λ':^10} | ")
+        f.write(f"{'TR Simulation':^15} | ")
+        f.write(f"{'TR Théorique':^15} | ")
+        f.write(f"{'Écart (%)':^15} | ")
+        f.write(f"{'ρ Simulation':^15} | ")
+        f.write(f"{'ρ Théorique':^15} | ")
+        f.write(f"{'Écart (%)':^15}\n")
+        
+        f.write("-" * 110 + "\n")
+        
+        for i, lmbda in enumerate(results_mm1["lambda"]):
+            tr_sim = results_mm1['mean_response_time'][i]
+            tr_theo = theory['mean_response_time'][i]
+            tr_ecart = abs((tr_sim - tr_theo) / tr_theo * 100) if tr_theo != 0 else 0
+            
+            rho_sim = results_mm1['server_utilization'][i]
+            rho_theo = theory['rho'][i]
+            rho_ecart = abs((rho_sim - rho_theo) / rho_theo * 100) if rho_theo != 0 else 0
+            
+            f.write(f"{lmbda:^10.2f} | ")
+            f.write(f"{tr_sim:^15.4f} | ")
+            f.write(f"{tr_theo:^15.4f} | ")
+            f.write(f"{tr_ecart:^15.2f} | ")
+            f.write(f"{rho_sim:^15.4f} | ")
+            f.write(f"{rho_theo:^15.4f} | ")
+            f.write(f"{rho_ecart:^15.2f}\n")
+        
+        f.write("-" * 110 + "\n\n")
+        
+        # Comparaison des modèles
+        f.write("COMPARAISON DES MODÈLES\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"{'λ':^10} | ")
+        f.write(f"{'G/M/1 / M/M/1':^15} | ")
+        f.write(f"{'M/G/1 / M/M/1':^15}\n")
+        
+        f.write("-" * 45 + "\n")
+        
+        for i, lmbda in enumerate(results_mm1["lambda"]):
+            ratio_gm1 = results_gm1['mean_response_time'][i] / results_mm1['mean_response_time'][i] if results_mm1['mean_response_time'][i] != 0 else 0
+            ratio_mg1 = results_mg1['mean_response_time'][i] / results_mm1['mean_response_time'][i] if results_mm1['mean_response_time'][i] != 0 else 0
+            
+            f.write(f"{lmbda:^10.2f} | ")
+            f.write(f"{ratio_gm1:^15.4f} | ")
+            f.write(f"{ratio_mg1:^15.4f}\n")
+        
+        f.write("-" * 45 + "\n\n")
+        
+        # Légende et notes
+        f.write("NOTES ET OBSERVATIONS\n")
+        f.write("-" * 80 + "\n")
+        f.write("- TR: Temps de Réponse moyen\n")
+        f.write("- TA: Temps d'Attente moyen\n")
+        f.write("- ρ: Taux d'occupation du serveur\n")
+        f.write("- Les valeurs théoriques sont calculées selon les formules du modèle M/M/1\n")
+        f.write("- Pour G/M/1, la loi d'arrivée est uniforme\n")
+        f.write("- Pour M/G/1, la loi de service est uniforme\n\n")
+        
+        # Pied de page
+        f.write("=" * 80 + "\n")
+        f.write(f"Fichier généré le {time.strftime('%d/%m/%Y à %H:%M:%S')}\n")
+        f.write("=" * 80 + "\n")
+    
+    print(f"Résultats enregistrés dans le fichier '{filename}'")
+
 
 def main():
     """
@@ -512,7 +649,10 @@ def main():
     # Calculer les métriques théoriques pour M/M/1
     theory = calculate_theoretical_metrics(results_mm1["lambda"], mu)
     
-    # Afficher les résultats
+    # Enregistrer les résultats dans un fichier texte
+    save_results_to_txt(results_mm1, results_gm1, results_mg1, theory)
+    
+    # Afficher les résultats graphiques
     plot_results(results_mm1, results_gm1, results_mg1)
     
     # Comparer avec la théorie
@@ -520,7 +660,7 @@ def main():
     
     end_time = time.time()
     print(f"\nTemps d'exécution total: {end_time - start_time:.2f} secondes")
-    print("\nSimulations terminées! Les graphiques ont été enregistrés.")
+    print("\nSimulations terminées! Les graphiques et les résultats texte ont été enregistrés.")
 
 
 if __name__ == "__main__":
