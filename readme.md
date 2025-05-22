@@ -1,202 +1,268 @@
-# Queue Simulation: M/M/1, G/M/1 and M/G/1
+# Simulation de Files d'Attente : M/M/1, G/M/1 et M/G/1
 
-This project is a Python implementation of single-server queue simulations to compare the behavior of three different models: M/M/1, G/M/1, and M/G/1.
+Ce projet est une implémentation Python de simulations de files d'attente à serveur unique pour comparer le comportement de trois modèles différents : M/M/1, G/M/1 et M/G/1.
 
-## Description
+## 📋 Description
 
-This simulation allows analyzing and comparing the performance of different queueing systems based on the arrival rate λ. The main metrics studied are:
+Cette simulation permet d'analyser et de comparer les performances de différents systèmes de files d'attente en fonction du taux d'arrivée λ. Les principales métriques étudiées sont :
 
-- Average response time (time spent in the system)
-- Server utilization rate (ρ = λ/μ)
-- Average waiting time in the queue
+- **Temps de réponse moyen** (temps passé dans le système)
+- **Taux d'utilisation du serveur** (ρ = λ/μ)
+- **Temps d'attente moyen** dans la file
 
-## Prerequisites
+## 🔧 Prérequis
 
-To run this program, you'll need the following Python libraries:
-- numpy
-- matplotlib
-- scipy
+Pour exécuter ce programme, vous aurez besoin des bibliothèques Python suivantes :
 
-You can install them with pip:
+- `numpy`
+- `matplotlib`
+- `scipy`
+
+Installation via pip :
 ```bash
 pip install numpy matplotlib scipy
 ```
 
-## Usage
+## 🚀 Utilisation
 
-Execute the main script:
+Exécutez le script principal :
 ```bash
 python simulation.py
 ```
-# Simulation de Files d'Attente à Un Serveur
 
-## Description
+## 📊 Modèles Simulés
 
-Ce projet simule et compare trois modèles de file d'attente à un seul serveur : M/M/1, G/M/1, et M/G/1. Il fournit une analyse comparative complète avec validation théorique, visualisations graphiques et rapports détaillés.
-
-## Modèles Simulés
-
-| Modèle | Arrivées | Services |
-|--------|----------|----------|
+| Modèle | Type d'Arrivées | Type de Services |
+|--------|-----------------|------------------|
 | **M/M/1** | Exponentielles (λ) | Exponentielles (μ) |
 | **G/M/1** | Générales (uniforme ou normale, moyenne = 1/λ) | Exponentielles (μ) |
 | **M/G/1** | Exponentielles (λ) | Générales (uniforme ou normale, moyenne = 1/μ) |
 
-## Fonctionnalités
+### Notation des Modèles
+- **M** : Distribution de Poisson/Exponentielle (processus markovien)
+- **G** : Distribution générale (uniforme ou normale dans notre cas)
+- **1** : Un seul serveur
 
-### Simulation
+## ⚙️ Fonctionnalités Principales
+
+### 🎯 Simulation
 - Génération de temps d'arrivée et de service selon différentes lois de probabilité
-- Simulation événement par événement
-- Calcul des métriques de performance : temps d'attente, temps de réponse, utilisation du serveur
-- Agrégation sur plusieurs répétitions pour réduire la variance
+- Simulation événement par événement avec gestion précise des files d'attente
+- Calcul automatique des métriques de performance
+- Agrégation sur plusieurs répétitions pour réduire la variance statistique
 
-### Analyse
-- Comparaison des résultats simulés avec les prédictions théoriques (M/M/1)
-- Graphiques comparatifs des performances
-- Ratios de performance entre modèles
-- Validation de la stabilité du système (ρ < 1)
+### 📈 Analyse Comparative
+- Comparaison des résultats simulés avec les prédictions théoriques (modèle M/M/1)
+- Génération de graphiques comparatifs des performances
+- Calcul des ratios de performance entre modèles
+- Validation de la stabilité du système (condition : ρ < 1)
 
-### Génération de Rapports
-- Graphiques détaillés avec comparaisons théoriques
-- Rapports textuels complets avec tableaux de résultats
-- Sauvegarde automatique des résultats
+### 📝 Génération de Rapports
+- Visualisations graphiques détaillées avec superposition théorique
+- Rapports textuels complets avec tableaux de résultats formatés
+- Sauvegarde automatique des résultats avec horodatage
 
-## Structure du Code
+## 🏗️ Architecture du Code
 
-### Classe QueueSimulator
+### Classe `QueueSimulator`
 
 #### Initialisation
 ```python
-QueueSimulator(lmbda, mu, nb_clients, seed)
+QueueSimulator(lmbda, mu, nb_clients, seed=None)
 ```
 
 **Paramètres :**
-- `lmbda (λ)` : taux d'arrivée moyen
-- `mu (μ)` : taux de service moyen  
-- `nb_clients` : nombre total de clients à simuler
-- `seed` : graine pour reproductibilité
+- `lmbda (λ)` : Taux d'arrivée moyen des clients
+- `mu (μ)` : Taux de service moyen du serveur
+- `nb_clients` : Nombre total de clients à simuler
+- `seed` : Graine aléatoire pour la reproductibilité des résultats
 
-**Vérification de stabilité :** ρ = λ/μ < 1
+**Vérification automatique de stabilité :** Le système vérifie que ρ = λ/μ < 1
 
 #### Générateurs de Durées Aléatoires
 
-- **Exponentielle** : `generate_exponential(rate, size)` - pour processus sans mémoire
-- **Uniforme** : `generate_uniform(a, b, size)` - distribution uniforme centrée
-- **Normale** : `generate_normal(mean, std, size)` - distribution normale tronquée (valeurs positives)
+- **`generate_exponential(rate, size)`** : Distribution exponentielle pour les processus sans mémoire
+- **`generate_uniform(a, b, size)`** : Distribution uniforme avec bornes ajustées pour respecter la moyenne
+- **`generate_normal(mean, std, size)`** : Distribution normale tronquée (valeurs strictement positives)
 
-### Algorithme de Simulation
+### 🔄 Algorithme de Simulation
 
 #### Calcul des Temps d'Arrivée
 ```python
 arrival_times = np.cumsum(inter_arrival_times)
 ```
-Le client i arrive à t_i = Σ_{k≤i} X_k
+Le client i arrive au temps : **t_i = Σ_{k≤i} X_k** (somme cumulative des intervalles)
 
-#### Calcul des Départs
-- **Premier client (i=0) :**
-  ```python
-  departure_times[0] = arrival_times[0] + service_times[0]
-  wait_times[0] = 0
-  ```
+#### Logique de Traitement des Clients
 
-- **Clients suivants (i≥1) :**
-  ```python
-  wait_times[i] = max(0, departure_times[i-1] - arrival_times[i])
-  departure_times[i] = arrival_times[i] + wait_times[i] + service_times[i]
-  ```
+**Premier client (i=0) :**
+```python
+departure_times[0] = arrival_times[0] + service_times[0]
+wait_times[0] = 0  # Pas d'attente pour le premier client
+```
 
-#### Métriques Calculées
+**Clients suivants (i≥1) :**
+```python
+# Calcul du temps d'attente
+wait_times[i] = max(0, departure_times[i-1] - arrival_times[i])
 
-- **Temps d'attente moyen :** W̄ = (1/N) Σᵢ wait_times[i]
-- **Temps de réponse moyen :** T̄ = (1/N) Σᵢ (departure_times[i] - arrival_times[i])
-- **Utilisation du serveur :** U = Σᵢ service_times[i] / temps_total
+# Calcul du temps de départ
+departure_times[i] = arrival_times[i] + wait_times[i] + service_times[i]
+```
 
-## Méthodes de Simulation
+#### 📊 Métriques Calculées
 
-### M/M/1 (`simulate_MM1`)
-- Arrivées : distribution exponentielle Exp(λ)
-- Services : distribution exponentielle Exp(μ)
+- **Temps d'attente moyen :** `W̄ = (1/N) × Σᵢ wait_times[i]`
+- **Temps de réponse moyen :** `T̄ = (1/N) × Σᵢ (departure_times[i] - arrival_times[i])`
+- **Utilisation du serveur :** `U = Σᵢ service_times[i] / temps_total_simulation`
 
-### G/M/1 (`simulate_GM1(distribution)`)
-- Arrivées : distribution générale (uniforme ou normale) avec moyenne 1/λ
-- Services : distribution exponentielle Exp(μ)
+## 🎲 Méthodes de Simulation par Modèle
 
-### M/G/1 (`simulate_MG1(distribution)`)
-- Arrivées : distribution exponentielle Exp(λ)
-- Services : distribution générale (uniforme ou normale) avec moyenne 1/μ
+### M/M/1 - `simulate_MM1()`
+- **Arrivées :** Distribution exponentielle Exp(λ)
+- **Services :** Distribution exponentielle Exp(μ)
+- **Propriété :** Processus complètement markovien (sans mémoire)
 
-## Expérimentation
+### G/M/1 - `simulate_GM1(distribution)`
+- **Arrivées :** Distribution générale (uniforme ou normale) avec moyenne contrôlée = 1/λ
+- **Services :** Distribution exponentielle Exp(μ)
+- **Impact :** Variabilité des arrivées sur les performances
+
+### M/G/1 - `simulate_MG1(distribution)`
+- **Arrivées :** Distribution exponentielle Exp(λ)
+- **Services :** Distribution générale (uniforme ou normale) avec moyenne contrôlée = 1/μ
+- **Impact :** Variabilité des services sur les performances
+
+## 🧪 Protocole d'Expérimentation
 
 ### Paramètres d'Expérience
-- λ variant de 0.1 à 0.9 (pas de 0.1)
-- μ = 1 (fixe)
-- Nombre de répétitions configurable (typiquement ≥ 3)
+- **Taux d'arrivée λ :** Varie de 0.1 à 0.9 par pas de 0.1
+- **Taux de service μ :** Fixé à 1.0
+- **Répétitions :** Nombre configurable (recommandé : ≥ 5 pour la robustesse statistique)
+- **Nombre de clients :** Suffisamment grand pour la convergence (recommandé : ≥ 1000)
 
-### Processus
-1. Pour chaque valeur de λ :
-   - Exécution de multiples répétitions avec graines différentes
-   - Simulation des trois modèles
-   - Calcul des moyennes sur les répétitions
-   - Stockage des résultats
+### Processus Expérimental
+1. **Pour chaque valeur de λ :**
+   - Génération de graines aléatoires différentes pour chaque répétition
+   - Exécution simultanée des trois modèles (M/M/1, G/M/1, M/G/1)
+   - Collecte des métriques individuelles
+   - Calcul des moyennes et écarts-types sur les répétitions
 
-## Analyse Théorique (M/M/1)
+2. **Stockage structuré :** Organisation des résultats dans des dictionnaires indexés par λ
 
-### Formules de Référence
-- **Facteur d'utilisation :** ρ = λ/μ
-- **Temps de séjour moyen :** E[T] = 1/(μ-λ)
-- **Temps d'attente moyen :** E[W] = ρ/(μ-λ)
+## 📐 Fondements Théoriques (M/M/1)
 
-### Validation
-Comparaison systématique entre résultats simulés et prédictions théoriques pour le modèle M/M/1.
+### Formules de Référence Exactes
+- **Facteur d'utilisation :** `ρ = λ/μ`
+- **Temps de séjour moyen :** `E[T] = 1/(μ-λ) = 1/(μ(1-ρ))`
+- **Temps d'attente moyen :** `E[W] = ρ/(μ-λ) = ρ/(μ(1-ρ))`
+- **Nombre moyen de clients :** `E[N] = ρ/(1-ρ)`
 
-## Visualisations
+### Processus de Validation
+- Comparaison systématique simulation vs théorie pour chaque λ
+- Calcul des écarts relatifs en pourcentage
+- Vérification de la convergence pour les grandes simulations
 
-### Graphiques Générés
-1. **Temps de réponse** vs λ pour les trois modèles
-2. **Temps d'attente** vs λ 
-3. **Utilisation du serveur** vs λ (avec droite théorique ρ)
-4. **Ratios de performance** : T̄_{G/M/1}/T̄_{M/M/1} et T̄_{M/G/1}/T̄_{M/M/1}
+## 📈 Visualisations et Analyses
 
-### Comparaison Théorique
-Superposition des courbes simulées et théoriques pour validation du modèle M/M/1.
+### Graphiques Générés Automatiquement
 
-## Rapport de Résultats
+1. **Temps de Réponse vs λ**
+   - Courbes pour les trois modèles
+   - Superposition de la courbe théorique M/M/1
+   - Mise en évidence des écarts dus à la variabilité
 
-Le script génère automatiquement un rapport texte détaillé comprenant :
+2. **Temps d'Attente vs λ**
+   - Comparaison des comportements
+   - Validation théorique pour M/M/1
 
-1. **Paramètres et résumé** des modèles simulés
-2. **Tableau détaillé** pour chaque λ :
-   - Valeurs théoriques de ρ
+3. **Utilisation du Serveur vs λ**
+   - Droite théorique ρ = λ/μ
+   - Vérification de la cohérence des simulations
+
+4. **Ratios de Performance**
+   - `T̄_{G/M/1}/T̄_{M/M/1}` : Impact de la variabilité des arrivées
+   - `T̄_{M/G/1}/T̄_{M/M/1}` : Impact de la variabilité des services
+
+### Interprétation des Résultats
+- **Ratios > 1 :** Dégradation des performances par rapport au cas markovien
+- **Ratios < 1 :** Amélioration (rare, dépendant des distributions choisies)
+- **Convergence asymptotique :** Validation de la robustesse statistique
+
+## 📄 Système de Rapport Automatique
+
+### Contenu du Rapport Généré
+1. **En-tête avec paramètres de simulation**
+   - Configuration générale
+   - Nombre de répétitions et de clients
+   - Distributions utilisées
+
+2. **Tableau détaillé par valeur de λ**
+   - Facteur d'utilisation théorique ρ
    - Métriques T̄, W̄, U pour chaque modèle
-   - Écarts (%) entre simulation et théorie
-   - Ratios de performance
-3. **Notes d'interprétation** et hypothèses
-4. **Horodatage** de génération
+   - Écarts percentuels simulation/théorie (M/M/1)
+   - Ratios de performance inter-modèles
 
-## Points Clés de l'Implémentation
+3. **Section d'analyse et interprétation**
+   - Notes sur la validité des résultats
+   - Hypothèses du modèle et limitations
+   - Recommandations d'utilisation
 
-### Événements de Simulation
-1. **Génération des durées** selon les lois spécifiées
-2. **Calcul des arrivées** par cumul des intervalles
-3. **Gestion de l'attente** si serveur occupé
-4. **Calcul des départs** incluant attente et service
-5. **Agrégation statistique** sur clients et répétitions
+4. **Métadonnées**
+   - Horodatage de génération
+   - Configuration système utilisée
 
-### Robustesse
-- Vérification de stabilité du système
-- Gestion des valeurs négatives (distributions normales)
-- Reproductibilité via graines aléatoires
-- Validation par comparaison théorique
+## 🔍 Points Techniques Clés
 
-## Usage
+### Gestion des Événements de Simulation
+1. **Génération robuste des durées** selon les lois spécifiées
+2. **Calcul incrémental des arrivées** par cumul efficace
+3. **Gestion rigoureuse de l'occupation du serveur**
+4. **Calcul précis des temps de départ** incluant toutes les composantes
+5. **Agrégation statistique multi-niveaux** (clients × répétitions)
 
-Le code fournit un cadre complet pour :
-- **Étudier empiriquement** les performances de files d'attente mono-serveur
-- **Comparer** l'impact des différentes distributions
-- **Valider** les modèles théoriques
-- **Analyser** la variabilité des performances
+### Robustesse et Fiabilité
+- **Vérification préalable de stabilité** du système
+- **Gestion des cas limites** (distributions normales négatives)
+- **Reproductibilité garantie** via contrôle des graines aléatoires
+- **Validation croisée** par comparaison théorique systématique
+- **Gestion d'erreurs** et messages informatifs
 
-## Conclusion
+## 💡 Applications et Cas d'Usage
 
-Cette simulation combine rigueur statistique, validation théorique et visualisation claire pour une analyse complète des systèmes de files d'attente. Elle permet de quantifier l'impact des différentes distributions sur les performances du système et de valider les modèles théoriques classiques.
+### Domaines d'Application
+- **Analyse de performance** de systèmes informatiques
+- **Dimensionnement** de centres d'appels
+- **Optimisation** de processus industriels
+- **Recherche académique** en théorie des files d'attente
 
+### Objectifs Pédagogiques
+- **Illustration pratique** des concepts théoriques
+- **Comparaison empirique** des modèles stochastiques
+- **Validation expérimentale** des formules analytiques
+- **Sensibilisation** à l'impact de la variabilité
+
+## 🎯 Résultats Attendus et Interprétation
+
+### Comportements Typiques Observés
+- **M/M/1 :** Concordance étroite avec la théorie (validation)
+- **G/M/1 :** Impact modéré de la variabilité des arrivées
+- **M/G/1 :** Impact plus marqué de la variabilité des services
+- **Convergence :** Stabilisation des métriques avec l'augmentation du nombre de clients
+
+### Facteurs d'Influence
+- **Niveau de charge ρ :** Impact croissant près de la saturation (ρ → 1)
+- **Type de distribution :** Écarts variables selon uniforme vs normale
+- **Taille d'échantillon :** Précision croissante avec le nombre de clients
+- **Nombre de répétitions :** Réduction de la variance des estimateurs
+
+## 📋 Conclusion
+
+Cette simulation offre un environnement complet et rigoureux pour :
+
+- **Étudier quantitativement** les performances des systèmes de files d'attente
+- **Comprendre l'impact** des différentes distributions sur le comportement du système
+- **Valider expérimentalement** les modèles théoriques classiques
+- **Analyser finement** la variabilité et la robustesse des performances
+
+Le framework combine rigueur mathématique, implémentation efficace et présentation claire des résultats, en faisant un outil de référence pour l'analyse des systèmes de files d'attente à serveur unique.
